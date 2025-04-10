@@ -1,0 +1,16 @@
+# version: '3.9' # Obsolete, can be removed
+
+services:
+  auth:
+    build: ./auth-service
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./auth-service:/app
+    env_file:
+      - ./.env
+    
+    environment:
+      MONGODB_URI: ${MONGO_URL}
+
+
