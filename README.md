@@ -28,7 +28,7 @@ bash
 Copy
 Edit
 # 1. Clone the repository
-git clone https://github.com/your-username/everstory.git
+git clone https://github.com/Moksh1201/EversStory
 cd everstory-backend
 
 # 2. Set up environment
