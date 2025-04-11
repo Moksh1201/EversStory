@@ -1,63 +1,9 @@
-from fastapi import FastAPI, HTTPException
-from fastapi import Depends
-from passlib.context import CryptContext
-from jose import jwt
-from datetime import datetime, timedelta
-from schemas import UserCreate, UserOut
-from database import db
-from bson.objectid import ObjectId
-from fastapi.middleware.cors import CORSMiddleware
-from .api import auth
+from fastapi import FastAPI
+from app.api.routes_auth import router as auth_router
+from app.api.routes_user import router as user_router
 
-app = FastAPI(title="Auth Service", version="1.0.0")
+app = FastAPI()
 
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Include routers
-app.include_router(auth.router)
-
-SECRET_KEY = "32ybd8hUDW@#8bde823832!&Y!"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
-
-def hash_password(password: str):
-    return pwd_context.hash(password)
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-def create_access_token(data: dict):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-@app.post("/register")
-async def register(user: UserCreate):
-    existing_user = await db.users.find_one({"username": user.username})
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Username already taken")
-
-    hashed_pw = hash_password(user.password)
-    result = await db.users.insert_one({
-        "username": user.username,
-        "hashed_password": hashed_pw
-    })
-
-    return {"id": str(result.inserted_id), "username": user.username}
-
-@app.post("/login")
-async def login(user: UserCreate):
-    db_user = await db.users.find_one({"username": user.username})
-    if not db_user or not verify_password(user.password, db_user["hashed_password"]):
-        raise HTTPException(status_code=400, detail="Invalid credentials")
-
-    token = create_access_token(data={"sub": user.username})
-    return {"access_token": token, "token_type": "bearer"}
+app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
+app.include_router(user_router, prefix="/user", tags=["User"])
+app.include_router(profile.router, prefix="/profile", tags=["Profile"])

@@ -18,9 +18,5 @@ class UserLogin(BaseModel):
 class UserOut(UserBase):
     id: str
 
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
 class TokenData(BaseModel):
     email: Optional[str] = None

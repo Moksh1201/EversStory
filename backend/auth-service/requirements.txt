@@ -35,3 +35,5 @@ python-dotenv
 # Other Utilities
 idna==3.10
 six==1.17.0
+pydantic[email]
+
