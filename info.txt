@@ -1,0 +1,167 @@
+Fullstack Hackathon 2025
+Overview
+DataGenie started in 2020 to do things the smarter way - to automate the boring and let
+innovation be rightfully at the center.
+We are a geographically distributed team passionate about revamping the way analytics is
+consumed in the enterprise today. Behind the DataGenie magic is a hand-picked team of
+experts that has over 80 years of combined experience in data analytics. We have first-hand
+experience with both the ‘good’ & the ‘not so good’ parts of the current analytics landscape.
+While we retain & enhance the ‘good’
+, we know how exactly the ‘not so good’ is to be
+revamped.
+At DataGenie, our vision is to make it effortless for businesses to realize data-driven
+decision-making at scale. We are agile, highly collaborative, and customer-centric in our
+approach to solution engineering and technology.
+There's a lot that goes into building a culture and we keep it simple - work on what drives you
+and solve real problems alongside some of the smartest people in the business. It's real every
+step of the way.
+We're excited to extend an invitation for you to join our Hackathon, centered around the theme
+“Echoes of Time: Unraveling Memories, Weaving Stories”
+Put on your creative hats and get Hacking!
+Problem Statement
+Picture a world where every shared moment is a thread in the grand tapestry of time—where
+memories are not just captured but revisited, cherished, and woven into stories that last forever.
+Meet "Everstory"
+—a place where moments never fade.
+Long ago, storytellers preserved history through
+words, passing down memories from one generation
+to the next. But in today's fast-moving digital world,
+our most treasured experiences often get lost in an
+endless stream of fleeting content. Everstory is here
+to change that. It’s more than just a platform—it’s a
+living journal, a sanctuary where users can relive past
+adventures, organize treasured snapshots, and build
+collaborative memory albums with loved ones.
+Whether it’s reliving past adventures, organizing
+treasured snapshots, or creating collaborative
+memory albums, Memoire is designed to bring people
+closer through shared experiences.
+At DataGenie, we believe in building seamless digital experiences. This year, we challenge you
+to create a scalable, memory-driven social platform, much like Instagram, where users can
+store, organize, and relive their most cherished moments.
+Can you design an application where the past and present intertwine effortlessly? One
+that makes reminiscing as joyful as the moment itself? The clock is ticking—let’s make
+memories last! 🚀
+Create a scalable Instagram-like application with React Frontend and a microservices-based
+Goal
+backend.
+All Rights Reserved Code Z Inc DBA DataGenie®
+2
+High Level Overview
+Frontend (React + TypeScript)
+●
+●
+●
+●
+●
+●
+Use a scalable folder structured using feature-based or bullet-proof architecture
+Implement JWT-based authentication with protected routes.
+Optimize API handling with React Query, SWR, or Suspense.
+Enable efficient image uploads and real-time updates (WebSockets, Polling, or
+Optimistic UI).
+Build a virtualized post feed with infinite scrolling and debounced search.
+Implement role-based access control for Public/Private posts.
+Backend (Microservices)
+●
+●
+●
+●
+●
+Develop three independent microservices (Auth, Image, Friendship), each containerized
+and orchestrated in Kubernetes.
+Auth Service: Handle user authentication (JWT), profile management, follow/unfollow,
+and role-based access.
+Image Service: Manage image uploads (Cloudinary/S3/Local), private/public post
+settings, secure delivery, and optional caching/compression.
+Friendship Service: Handle friend requests, manage connections, and retrieve friend
+lists.
+All services should be Dockerized, database-integrated (Postgres/MongoDB), API
+Gateway-managed, and deployed via Helm. (Bonus)
+All Rights Reserved Code Z Inc DBA DataGenie®
+3
+Checkpoints
+Frontent End
+1. Checkpoint 1: Project Setup & Scalable Folder Structure - Set up Vite with
+TypeScript and structure the project using a scalable, feature-based approach.
+Configure React Router for navigation, use Zustand or Redux for state management,
+and enable absolute imports for cleaner code.
+2. Checkpoint 2: Authentication & API Security - Implement JWT-based login, signup,
+and logout. Secure routes dynamically with guards and persist user sessions across
+reloads using React Query.
+3. Checkpoint 3: Optimized Post Feed & Virtualized List - Build an infinite scrolling post
+feed using React Virtualized or React-Window for efficient rendering. Optimize API calls
+with React Query’s caching and prefetching.
+4. Checkpoint 4: Image Upload & Privacy Settings - Enable image uploads with privacy
+controls for Public or Private settings. Optimize file handling with compression, progress
+tracking, and async processing.
+5. Checkpoint 5: Friend System & API Integration - Implement follow/unfollow
+functionality and fetch the friends list from a microservice. Ensure private posts are
+visible only to approved connections.
+Backend End
+1. Checkpoint 1: Microservices Setup & Dockerization - Set up Auth, Image, and
+Friendship services using FastAPI (Python), with PostgreSQL or MongoDB in a
+Dockerized setup.
+2. Checkpoint 2: Authentication, Image & Friendship Microservice - Implement JWT
+authentication, user registration, login, and follow/unfollow API. Handle secure uploads
+(Cloudinary/S3), set visibility (Public/Private), and optimize performance with caching
+and compression. Manage follow/unfollow, fetch friends list, and restrict private posts to
+approved users.
+3. (Bonus) Checkpoint 3: Dockerization & Kubernetes Setup - Dockerize services,
+deploy via Kubernetes, and use an Ingress Controller for API routing.
+4. (Bonus) Checkpoint 4: Helm Chart for One-Click Deployment - Create a one-click
+Helm deployment for services, databases, and connections.
+All Rights Reserved Code Z Inc DBA DataGenie®
+4
+Rules
+1. This is an individual participation hackathon
+2. It's an online hackathon, you can participate from anywhere.
+3. Upon receiving the problem statement you will have 4 days to submit your
+implementation.
+4. 5. Use Typscript/Python as the primary programming language for the implementation.
+Any API written should follow REST Principles
+6. The hack must be made available on GitHub as a private repository giving DataGenie
+access to read. Provide read access to github usernames: (KrishnanSG & Starkyv)
+7. To be eligible for evaluation you must have completed at least 3 checkpoints.
+8. The repository must contain a README.md and a short video explaining the
+implementation; it could contain diagrams or could have instructions on how to set up
+and use it.
+9. Any plagiarism detected will result in immediate disqualification.
+10. Your hack must be developed entirely during the Hackathon duration.
+Evaluation Criteria
+1. 3. 4. 5. 6. 7. General coding standards & usage of git
+2. Understanding of the concepts
+Scalable Architecture & Code Organization
+Optimized Performance (Efficient API Calls, Virtualization, Caching)
+Security & Authentication Best Practices
+Seamless Deployment with Kubernetes & Helm
+Effectiveness of the implemented solution
+Happy Hacking!
+Cheers from DataGenie Team 😀
+All Rights Reserved Code Z Inc DBA DataGenie®
+5
+FAQs
+1. Do I need to pay any money to register for the Hackathon? No. You do not have to
+pay anything to anyone to register yourself.
+2. Do I need to have any specific qualifications to be a participant in the Hackathon?
+If you love data science and know how to code, you are more than welcome to
+participate in the Hackathon.
+3. How do I submit what I have made for the Hackathon? You have to develop the
+application on your local system and commit the source code to a private GitHub
+repository giving (KrishnanSG & Starkyv) access along with instructions to run the
+application.
+4. How is the environment? Will your environment support any language? Will you
+provide any IDE and DB for us to work on ideas? You have to develop the entire
+software application on your local system.
+5. Does one have to be online and available for the entire duration of the Hackathon?
+No, you can develop the application on your local system based on the given problem
+statement and then submit it.
+6. Do I need to give a demo for the product that I have built? Yes, a short video
+explaining your approach and your implementation.
+7. Is there a constraint on the frameworks I can use? For the frontend we expect you to
+use React framework and for backend you are expected to use Python (FastAPI)
+(https://fastapi.tiangolo.com/) as the backend framework for the REST APIs.
+8. I have a question that is not listed here. Who can I contact?
+You can send an email to hackathon@datagenie.ai with your queries.
+All Rights Reserved Code Z Inc DBA DataGenie®
+6
