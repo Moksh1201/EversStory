@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pymongo[srv]
+python-dotenv
+passlib[bcrypt]
+pyjwt
+uvicorn[gunicorn]
+python-jose[cryptography]
+python-multipart

@@ -1,29 +1,64 @@
-version: '3.8'
 
 services:
   auth-service:
-    build: ./auth-service
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    environment:
+      - MONGO_URL=${MONGO_URL}
+      - JWT_SECRET=${JWT_SECRET}
     ports:
-      - "8000:8000"
-    env_file:
-      - .env
-    depends_on:
-      - mongodb
+      - "8001:8001"
     networks:
       - app-network
+    depends_on:
+      - mongodb
+
+  image-service:
+    build:
+      context: ./image-service
+      dockerfile: Dockerfile
+    container_name: image-service
+    environment:
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+    ports:
+      - "8002:8001"
+    networks:
+      - app-network
+    depends_on:
+      - mongodb
+
+  friendship-service:
+    build:
+      context: ./friendship-service
+      dockerfile: Dockerfile
+    container_name: friendship-service
+    environment:
+      - MONGO_URI=${MONGO_URL}
+      - JWT_SECRET=${JWT_SECRET}  
+      - JWT_ALGORITHM=HS256
+    ports:
+      - "8003:8001"
+    networks:
+      - app-network
+    depends_on:
+      - mongodb
 
   mongodb:
     image: mongo:latest
+    container_name: mongodb
+    environment:
+      - MONGO_URL=${MONGO_URL}
+      
     ports:
       - "27017:27017"
-    volumes:
-      - mongodb_data:/data/db
     networks:
       - app-network
 
 networks:
   app-network:
     driver: bridge
-
-volumes:
-  mongodb_data:

@@ -1,0 +1,9 @@
+fastapi
+pymongo
+python-multipart
+python-dotenv
+uvicorn
+pillow
+pydantic
+uvicorn[gunicorn]
+pyjwt

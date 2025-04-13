@@ -164,4 +164,53 @@ use React framework and for backend you are expected to use Python (FastAPI)
 8. I have a question that is not listed here. Who can I contact?
 You can send an email to hackathon@datagenie.ai with your queries.
 All Rights Reserved Code Z Inc DBA DataGenie®
+
+
+
+backend/
+├── auth-service/
+│   ├── Dockerfile
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── schemas.py
+│   │   ├── utils.py
+│   │   ├── main.py
+│   │   ├── auth.py
+│   │   ├── database.py
+│   ├── requirements.txt
+│   ├── README.md
+├── image-service/
+│   ├── Dockerfile
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── schemas.py
+│   │   ├── utils.py
+│   │   ├── main.py
+│   │   ├── image.py
+│   │   ├── database.py
+│   ├── requirements.txt
+│   ├── README.md
+├── friendship-service/
+│   ├── Dockerfile
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── models.py
+│   │   ├── schemas.py
+│   │   ├── utils.py
+│   │   ├── main.py
+│   │   ├── friendship.py
+│   │   ├── database.py
+│   ├── requirements.txt
+│   ├── README.md
+├── docker-compose.yml
+├── kubernetes/
+│   ├── auth-service-deployment.yaml
+│   ├── image-service-deployment.yaml
+│   ├── friendship-service-deployment.yaml
+│   ├── ingress.yaml
+│   ├── service.yaml
+├── README.md
+
 6

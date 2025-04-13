@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: friendship-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: friendship-service
+  template:
+    metadata:
+      labels:
+        app: friendship-service
+    spec:
+      containers:
+        - name: friendship-service
+          image: your-docker-repo/friendship-service:latest
+          ports:
+            - containerPort: 8003
+          env:
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: mongo-uri
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: friendship-service
+spec:
+  selector:
+    app: friendship-service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8003
+  type: ClusterIP
