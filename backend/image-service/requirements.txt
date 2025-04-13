@@ -2,9 +2,9 @@ fastapi
 motor
 python-multipart
 pydantic
-boto3              # For AWS S3
+boto3              
 python-dotenv
-Pillow             # For compression
-aiofiles           # For file handling
+Pillow             
+aiofiles           
 pymongo
 uvicorn[gunicorn]

@@ -1,41 +1,3 @@
-# from fastapi import APIRouter, File, UploadFile, HTTPException, Depends, Form
-# from . import utils, schemas, models, database
-# from bson.objectid import ObjectId
-# from .utils.compress_utils import compress_image
-# from .utils.s3_utils import upload_to_s3
-# from datetime import datetime
-
-# router = APIRouter()
-
-# @router.post("/upload/")
-# async def upload_image(
-#     file: UploadFile = File(...),
-#     user_id: str = Form(...),
-#     visibility: str = Form("public"),
-#     caption: str = Form(None)
-# ):
-#     try:
-#         db = database.get_database_connection()
-#         compressed = await compress_image(file)
-#         image_url = await upload_to_s3(compressed, file.filename)
-
-#         # Build and insert metadata directly
-#         image_data = {
-#             "user_id": user_id,
-#             "file_name": file.filename,
-#             "image_url": image_url,
-#             "caption": caption,
-#             "visibility": visibility,
-#             "created_at": datetime.utcnow()
-#         }
-
-#         result = db.images.insert_one(image_data)
-#         image_data["_id"] = str(result.inserted_id)
-
-#         return {"message": "Image uploaded", "data": image_data}
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
 from fastapi import APIRouter, File, UploadFile, HTTPException, Depends, Form
 from . import utils, schemas, models, database
 from bson.objectid import ObjectId
@@ -53,16 +15,12 @@ async def upload_image(
     caption: str = Form(None)
 ):
     try:
-        # Get a database connection
         db = database.get_database_connection()
         
-        # Compress the image if needed
         compressed = await compress_image(file)
         
-        # Upload the compressed image to S3 and get the URL
         image_url = await upload_to_s3(compressed, file.filename)
 
-        # Build and insert metadata directly into MongoDB
         image_data = {
             "user_id": user_id,
             "file_name": file.filename,

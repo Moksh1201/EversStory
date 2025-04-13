@@ -36,22 +36,19 @@ import os
 
 app = FastAPI()
 
-# CORS configuration — recommend setting to specific origins for security
 origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173"
-    # Add production domain(s) here
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # Use ["*"] only for testing/dev
+    allow_origins=origins,  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Dependency to get the database session
 def get_db():
     db = database.get_database_connection()
     try:
@@ -59,5 +56,4 @@ def get_db():
     finally:
         db.close()
 
-# Include image router
 app.include_router(image.router, prefix="/images")
