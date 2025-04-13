@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ToastContainer } from 'react-toastify';
+import { Toaster } from 'sonner';
 import 'react-toastify/dist/ReactToastify.css';
 import { Login } from './components/auth/Login';
 import { Signup } from './components/auth/Signup';
@@ -57,6 +58,7 @@ function App() {
         </Routes>
       </Router>
       <ToastContainer position="bottom-right" />
+      <Toaster position="bottom-right" />
     </QueryClientProvider>
   );
 }

@@ -157,6 +157,7 @@ from app.database import user_collection
 from app.utils import get_password_hash, verify_password
 import logging
 from app.schemas import User 
+from bson import ObjectId
 
 
 load_dotenv()
@@ -177,6 +178,7 @@ class Token(BaseModel):
 # This is used for the current user (not to be confused with imported User model)
 class CurrentUser(BaseModel):
     username: str
+    user_id: str
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     if expires_delta is None:
@@ -219,7 +221,8 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token:
     access_token = create_access_token(
         data={
             "sub": user["email"],  # Use email as the "sub" claim
-            "username": user["username"]
+            "username": user["username"],
+            "user_id": str(user["_id"]) 
         },
         expires_delta=access_token_expires
     )
@@ -234,45 +237,33 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        logging.info("Attempting to validate token")
         payload = jwt.decode(
             token,
             SECRET_KEY,
-            algorithms=[ALGORITHM],  # Ensure algorithm matches
-            options={"verify_exp": True}  # Ensure expiration is checked
+            algorithms=[ALGORITHM],
+            options={"verify_exp": True}
         )
-        logging.info(f"Token validated successfully for payload: {payload}")
         
         email: str = payload.get("sub")
-        if not email:
-            logging.error("No email found in token payload")
+        user_id: str = payload.get("user_id")
+        if not email or not user_id:
             raise credentials_exception
-            
-        user_data = user_collection.find_one({"email": email})
+
+        user_data = user_collection.find_one({"_id": ObjectId(user_id)})
         if not user_data:
-            logging.error(f"No user found for email: {email}")
             raise credentials_exception
-        
-        logging.info(f"Successfully retrieved user data for {email}")
-        return CurrentUser(username=user_data["username"])
-        
+
+        return CurrentUser(username=user_data["username"], user_id=str(user_data["_id"]))
+
     except jwt.ExpiredSignatureError:
-        logging.error("Token has expired")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired",
             headers={"WWW-Authenticate": "Bearer"},
         )
     except jwt.InvalidTokenError as e:
-        logging.error(f"Invalid token: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid token: {str(e)}",
             headers={"WWW-Authenticate": "Bearer"},
-        )
-    except Exception as e:
-        logging.error(f"Unexpected error in /me endpoint: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An unexpected error occurred",
         )

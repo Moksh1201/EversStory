@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { imageService } from '../../services/image.service';
+import { postService } from '../../services/post.service';
 import { FaImage, FaTimes } from 'react-icons/fa';
+import { useAuthStore } from '../../store/auth.store';
+import { toast } from 'sonner';
 
 export const ImageUpload = () => {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [caption, setCaption] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,6 +18,10 @@ export const ImageUpload = () => {
     maxFiles: 1,
     onDrop: (acceptedFiles) => {
       const file = acceptedFiles[0];
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size should be less than 5MB');
+        return;
+      }
       setFile(file);
       setPreview(URL.createObjectURL(file));
     },
@@ -24,18 +29,25 @@ export const ImageUpload = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file) return;
+    if (!file) {
+      toast.error('Please select an image');
+      return;
+    }
 
     try {
       setIsUploading(true);
       setError(null);
-      await imageService.uploadImage(file, caption);
-      // Reset form
-      setFile(null);
-      setPreview(null);
-      setCaption('');
+
+      const response = await postService.uploadImage(file);
+      if (response) {
+        toast.success('Image uploaded successfully');
+        setFile(null);
+        setPreview(null);
+      }
     } catch (err) {
+      console.error('Error uploading image:', err);
       setError('Failed to upload image');
+      toast.error('Failed to upload image');
     } finally {
       setIsUploading(false);
     }
@@ -83,15 +95,6 @@ export const ImageUpload = () => {
           )}
         </div>
 
-        <div>
-          <textarea
-            value={caption}
-            onChange={(e) => setCaption(e.target.value)}
-            placeholder="Write a caption..."
-            className="input-field min-h-[100px]"
-          />
-        </div>
-
         {error && (
           <div className="text-red-500 text-sm text-center">{error}</div>
         )}
@@ -106,4 +109,4 @@ export const ImageUpload = () => {
       </form>
     </div>
   );
-}; 
+};

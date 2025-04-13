@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8002/images';
 
 export interface UploadResponse {
   imageUrl: string;
@@ -8,13 +8,7 @@ export interface UploadResponse {
 }
 
 export const imageService = {
-  async uploadImage(file: File, caption?: string) {
-    const formData = new FormData();
-    formData.append('image', file);
-    if (caption) {
-      formData.append('caption', caption);
-    }
-
+  async uploadImage(formData: FormData) {
     const response = await axios.post<UploadResponse>(
       `${API_URL}/images/upload`,
       formData,
@@ -44,4 +38,4 @@ export const imageService = {
     });
     return response.data;
   },
-}; 
+};
