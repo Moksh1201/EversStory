@@ -1,48 +1,143 @@
-from fastapi import APIRouter, HTTPException, Depends
-from . import models, schemas, database
-from .utils import update_friendship_status
+from fastapi import HTTPException
 from fastapi.responses import JSONResponse
+from bson import ObjectId
+from datetime import datetime
+from app.schemas import FriendshipRequest, FriendListResponse, FriendshipResponse
 
-friendship_router = APIRouter()
+def build_friendship_record(requester, accepter, status):
+    return {
+        "requester": requester,
+        "accepter": accepter,
+        "status": status,
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow()
+    }
 
-@friendship_router.post("/request")
-async def create_friendship(request: schemas.FriendshipRequest, db: database.Db = Depends(get_db)):
-    friendship_data = update_friendship_status(request.requester, request.accepter, "Pending")
-    result = db.friendships.insert_one(friendship_data)
 
-    if not result.inserted_id:
-        raise HTTPException(status_code=500, detail="Failed to create friendship request")
-    
-    return JSONResponse(content={"message": "Friendship request sent!"}, status_code=200)
+async def create_request_logic(request: FriendshipRequest, db, current_user: str):
+    if request.requester != current_user:
+        raise HTTPException(status_code=403, detail="Unauthorized request")
+    if request.requester == request.accepter:
+        raise HTTPException(status_code=400, detail="Cannot request yourself")
 
-@friendship_router.post("/accept")
-async def accept_friendship(request: schemas.FriendshipRequest, db: database.Db = Depends(get_db)):
-    friendship = db.friendships.find_one({
-        "requester": request.requester, 
-        "accepter": request.accepter, 
+    existing = db.find_one({
+        "$or": [
+            {"requester": request.requester, "accepter": request.accepter, "status": "Pending"},
+            {"requester": request.accepter, "accepter": request.requester, "status": "Pending"}
+        ]
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Request already exists")
+
+    db.insert_one(build_friendship_record(request.requester, request.accepter, "Pending"))
+    return JSONResponse(content={"message": "Friendship request sent!"})
+
+
+async def accept_request_logic(request: FriendshipRequest, db, current_user: str):
+    if request.accepter != current_user:
+        raise HTTPException(status_code=403, detail="Unauthorized to accept request")
+
+    friendship = db.find_one({
+        "requester": request.requester,
+        "accepter": request.accepter,
         "status": "Pending"
     })
-    
     if not friendship:
         raise HTTPException(status_code=404, detail="Friendship request not found")
-    
-    updated_friendship = update_friendship_status(request.requester, request.accepter, "Accepted")
-    db.friendships.update_one({"_id": friendship["_id"]}, {"$set": updated_friendship})
-    
-    return JSONResponse(content={"message": "Friendship request accepted!"}, status_code=200)
 
-@friendship_router.post("/reject")
-async def reject_friendship(request: schemas.FriendshipRequest, db: database.Db = Depends(get_db)):
-    friendship = db.friendships.find_one({
-        "requester": request.requester, 
-        "accepter": request.accepter, 
+    db.update_one({"_id": friendship["_id"]}, {
+        "$set": {
+            "status": "Accepted",
+            "updated_at": datetime.utcnow()
+        }
+    })
+
+    from app.database import client
+    user_collection = client["auth-service"]["users"]
+    user_collection.update_one({"email": request.accepter}, {"$addToSet": {"followers": request.requester}})
+    user_collection.update_one({"email": request.requester}, {"$addToSet": {"following": request.accepter}})
+
+    return JSONResponse(content={"message": "Friendship request accepted!"})
+
+
+async def reject_request_logic(request: FriendshipRequest, db):
+    friendship = db.find_one({
+        "requester": request.requester,
+        "accepter": request.accepter,
         "status": "Pending"
     })
-    
     if not friendship:
-        raise HTTPException(status_code=404, detail="Friendship request not found")
-    
-    updated_friendship = update_friendship_status(request.requester, request.accepter, "Rejected")
-    db.friendships.update_one({"_id": friendship["_id"]}, {"$set": updated_friendship})
-    
-    return JSONResponse(content={"message": "Friendship request rejected!"}, status_code=200)
+        raise HTTPException(status_code=404, detail="Request not found")
+
+    db.update_one({"_id": friendship["_id"]}, {
+        "$set": {
+            "status": "Rejected",
+            "updated_at": datetime.utcnow()
+        }
+    })
+    return JSONResponse(content={"message": "Friendship request rejected!"})
+
+
+async def get_friends_logic(user_id: str, db):
+    friendships = db.find({
+        "$or": [
+            {"requester": user_id, "status": "Accepted"},
+            {"accepter": user_id, "status": "Accepted"}
+        ]
+    })
+
+    friends = [
+        FriendshipResponse(
+            id=str(doc["_id"]),
+            requester=doc["requester"],
+            accepter=doc["accepter"],
+            status=doc["status"],
+            created_at=doc["created_at"],
+            updated_at=doc["updated_at"]
+        )
+        for doc in friendships
+    ]
+    return FriendListResponse(friends=friends)
+
+async def cancel_request_logic(request: FriendshipRequest, db, current_user: str):
+    if request.requester != current_user:
+        raise HTTPException(status_code=403, detail="Unauthorized to cancel this request")
+
+    friendship = db.find_one({
+        "requester": request.requester,
+        "accepter": request.accepter,
+        "status": "Pending"
+    })
+
+    if not friendship:
+        raise HTTPException(status_code=404, detail="No pending request found")
+
+    db.delete_one({"_id": friendship["_id"]})
+    return JSONResponse(content={"message": "Friendship request cancelled!"})
+
+
+async def unfollow_logic(request: FriendshipRequest, db, current_user: str):
+    if current_user != request.requester and current_user != request.accepter:
+        raise HTTPException(status_code=403, detail="Unauthorized to unfollow")
+
+    friendship = db.find_one({
+        "$or": [
+            {"requester": request.requester, "accepter": request.accepter},
+            {"requester": request.accepter, "accepter": request.requester}
+        ],
+        "status": "Accepted"
+    })
+
+    if not friendship:
+        raise HTTPException(status_code=404, detail="No existing friendship to unfollow")
+
+    db.delete_one({"_id": friendship["_id"]})
+
+    from app.database import client
+    user_collection = client["auth-service"]["users"]
+    user_collection.update_one({"email": request.accepter}, {"$pull": {"followers": request.requester}})
+    user_collection.update_one({"email": request.requester}, {"$pull": {"following": request.accepter}})
+    user_collection.update_one({"email": request.requester}, {"$pull": {"followers": request.accepter}})
+    user_collection.update_one({"email": request.accepter}, {"$pull": {"following": request.requester}})
+
+    return JSONResponse(content={"message": "Unfollowed successfully!"})

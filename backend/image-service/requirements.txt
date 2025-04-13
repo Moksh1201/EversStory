@@ -6,7 +6,5 @@ boto3              # For AWS S3
 python-dotenv
 Pillow             # For compression
 aiofiles           # For file handling
-cloudinary
 pymongo
-
 uvicorn[gunicorn]

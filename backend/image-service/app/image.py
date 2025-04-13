@@ -1,53 +1,80 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
-from . import utils, schemas
+# from fastapi import APIRouter, File, UploadFile, HTTPException, Depends, Form
+# from . import utils, schemas, models, database
+# from bson.objectid import ObjectId
+# from .utils.compress_utils import compress_image
+# from .utils.s3_utils import upload_to_s3
+# from datetime import datetime
+
+# router = APIRouter()
+
+# @router.post("/upload/")
+# async def upload_image(
+#     file: UploadFile = File(...),
+#     user_id: str = Form(...),
+#     visibility: str = Form("public"),
+#     caption: str = Form(None)
+# ):
+#     try:
+#         db = database.get_database_connection()
+#         compressed = await compress_image(file)
+#         image_url = await upload_to_s3(compressed, file.filename)
+
+#         # Build and insert metadata directly
+#         image_data = {
+#             "user_id": user_id,
+#             "file_name": file.filename,
+#             "image_url": image_url,
+#             "caption": caption,
+#             "visibility": visibility,
+#             "created_at": datetime.utcnow()
+#         }
+
+#         result = db.images.insert_one(image_data)
+#         image_data["_id"] = str(result.inserted_id)
+
+#         return {"message": "Image uploaded", "data": image_data}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
+
+from fastapi import APIRouter, File, UploadFile, HTTPException, Depends, Form
+from . import utils, schemas, models, database
 from bson.objectid import ObjectId
-from fastapi.responses import FileResponse
-import os
+from .utils.compress_utils import compress_image
+from .utils.s3_utils import upload_to_s3
+from datetime import datetime
 
 router = APIRouter()
 
-# Upload image route
 @router.post("/upload/")
-async def upload_image(file: UploadFile = File(...)):
+async def upload_image(
+    file: UploadFile = File(...),
+    user_id: str = Form(...),
+    visibility: str = Form("public"),
+    caption: str = Form(None)
+):
     try:
-        # Compress the image before uploading
-        compressed_file = await utils.compress_image(file)
+        # Get a database connection
+        db = database.get_database_connection()
         
-        # Upload the image to S3
-        image_url = await utils.upload_to_s3(compressed_file, file.filename)
+        # Compress the image if needed
+        compressed = await compress_image(file)
         
-        return {"message": "Image uploaded successfully", "image_url": image_url}
+        # Upload the compressed image to S3 and get the URL
+        image_url = await upload_to_s3(compressed, file.filename)
+
+        # Build and insert metadata directly into MongoDB
+        image_data = {
+            "user_id": user_id,
+            "file_name": file.filename,
+            "image_url": image_url,
+            "caption": caption,
+            "visibility": visibility,
+            "created_at": datetime.utcnow()
+        }
+
+        result = db.images.insert_one(image_data)
+        image_data["_id"] = str(result.inserted_id)
+
+        return {"message": "Image uploaded successfully", "data": image_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error uploading image: {str(e)}")
-
-# Update image route (Assuming we are updating the image itself)
-@router.put("/update/{image_id}/")
-async def update_image(image_id: str, file: UploadFile = File(...)):
-    try:
-        # Compress the new image before uploading
-        compressed_file = await utils.compress_image(file)
-        
-        # Replace old image in S3
-        new_image_url = await utils.upload_to_s3(compressed_file, file.filename)
-        
-        # Optionally delete the old image from S3 (if necessary)
-        # old_image_url = await utils.get_image_url_from_db(image_id)  # Example if you store URL in MongoDB
-        # await utils.delete_from_s3(old_image_url)
-        
-        return {"message": "Image updated successfully", "new_image_url": new_image_url}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error updating image: {str(e)}")
-
-# Delete image route
-@router.delete("/delete/{image_id}/")
-async def delete_image(image_id: str):
-    try:
-        # Get image URL from DB (if stored in DB)
-        # image_url = await utils.get_image_url_from_db(image_id)
-        
-        # Delete the image from S3
-        # await utils.delete_from_s3(image_url)
-        
-        return {"message": "Image deleted successfully"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error deleting image: {str(e)}")

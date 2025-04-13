@@ -5,11 +5,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Load MongoDB URI from environment variables
-MONGO_URI = os.getenv("MONGO_URL")
-client = MongoClient(MONGO_URI)
+MONGO_URL = os.getenv("MONGO_URL")
+client = MongoClient(MONGO_URL)
 
 # Access the database
-db = client["image_service_db"]
+db = client["EveryStory"]
 
 # Function to get the database connection
 def get_database_connection():
