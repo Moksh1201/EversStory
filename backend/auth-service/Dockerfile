@@ -5,10 +5,12 @@ WORKDIR /app
 # Copy your code
 COPY . /app/
 
-# Add this line to install certificates
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
+# Install required OS packages (e.g., certificates)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates gcc libpq-dev curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Python deps
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir python-multipart
 

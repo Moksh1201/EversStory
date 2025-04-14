@@ -31,7 +31,7 @@ export const imageService = {
   },
 
   async getFeed() {
-    const response = await axios.get(`${API_URL}/images/feed`, {
+    const response = await axios.get(`${API_URL}/feed`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       },

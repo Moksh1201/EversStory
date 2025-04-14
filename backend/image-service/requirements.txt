@@ -8,3 +8,5 @@ Pillow
 aiofiles           
 pymongo
 uvicorn[gunicorn]
+PyJWT
+python-jose[cryptography]

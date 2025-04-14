@@ -40,5 +40,6 @@ async def accept_follow(follow_request: FollowRequestSchema, current_user: dict 
 
 @router.get("/pending-requests")
 async def pending_requests(current_user: dict = Depends(get_current_user)):
+    # Get all pending requests for the user
     pending = list(followers_collection.find({"following_username": current_user["username"], "status": "pending"}))
     return {"pending_requests": [request["follower_username"] for request in pending]}

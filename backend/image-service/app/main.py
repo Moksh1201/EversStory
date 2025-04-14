@@ -28,10 +28,11 @@
 # # Define the routes for images (Upload, Update, Delete)
 # app.include_router(image.router)
 from fastapi import FastAPI, HTTPException, Depends, File, UploadFile
-from . import image, utils, schemas, database
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
+from app import image, utils, schemas, database
+
 import os
 
 app = FastAPI()
