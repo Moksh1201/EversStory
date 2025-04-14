@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
+const FRIENDSHIP_API_URL = import.meta.env.VITE_FRIENDSHIP_API_URL || 'http://localhost:8003';
 
 export interface UserProfile {
   id: string;
@@ -23,6 +24,13 @@ export interface Post {
   createdAt: string;
 }
 
+export interface User {
+  id: string;
+  username: string;
+  profilePicture?: string;
+  isFollowing?: boolean;
+}
+
 export const userService = {
   async getUserProfile(username: string) {
     const response = await axios.get(`${API_URL}/users/${username}`, {
@@ -33,10 +41,19 @@ export const userService = {
     return response.data;
   },
 
+  async getSuggestions() {
+    const response = await axios.get(`${API_URL}/auth/users`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    return response.data;
+  },
+
   async followUser(userId: string) {
     const response = await axios.post(
-      `${API_URL}/users/${userId}/follow`,
-      {},
+      `${FRIENDSHIP_API_URL}/request`,
+      { accepter: userId },
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -48,8 +65,8 @@ export const userService = {
 
   async unfollowUser(userId: string) {
     const response = await axios.post(
-      `${API_URL}/users/${userId}/unfollow`,
-      {},
+      `${FRIENDSHIP_API_URL}/unfollow`,
+      { accepter: userId },
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -57,14 +74,5 @@ export const userService = {
       }
     );
     return response.data;
-  },
-
-  async searchUsers(query: string) {
-    const response = await axios.get(`${API_URL}/users/search?q=${query}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`,
-      },
-    });
-    return response.data;
-  },
+  }
 }; 

@@ -2,6 +2,7 @@ import axios from 'axios';
 import { User } from './auth.service';
 
 const FRIENDSHIP_API_URL = 'http://localhost:8003';
+const API_URL = 'http://localhost:8003'; // Assuming same base for other endpoints
 
 export interface FriendshipRequest {
   requester: string;
@@ -96,6 +97,41 @@ class FriendshipService {
     );
     return response.data;
   }
+
+  // ✅ New methods added below
+
+  async followUser(userId: string) {
+    await axios.post(
+      `${API_URL}/follow/${userId}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      }
+    );
+  }
+
+  async unfollowUser(userId: string) {
+    await axios.post(
+      `${API_URL}/users/unfollow/${userId}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      }
+    );
+  }
+
+  async searchUsers(query: string) {
+    const response = await axios.get(`${API_URL}/users/search?q=${query}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    });
+    return response.data;
+  }
 }
 
-export const friendshipService = new FriendshipService(); 
+export const friendshipService = new FriendshipService();

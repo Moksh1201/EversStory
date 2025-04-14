@@ -30,3 +30,7 @@ class FollowStatus(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class UserOut(BaseModel):
+    username: str
+    email: str

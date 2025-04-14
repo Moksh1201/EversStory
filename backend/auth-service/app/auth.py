@@ -11,10 +11,8 @@ from app.utils import get_password_hash, verify_password
 import logging
 from app.schemas import User 
 from bson import ObjectId
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from typing import List
+from app.schemas import User, UserOut
 
 load_dotenv()
 
@@ -23,16 +21,14 @@ router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 SECRET_KEY = os.getenv("JWT_SECRET")
-if not SECRET_KEY:
-    raise ValueError("JWT_SECRET environment variable is not set")
-
-ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")  # Default to HS256 if not set
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 
 # Token response schema
 class Token(BaseModel):
     access_token: str
     token_type: str
+
 
 # This is used for the current user (not to be confused with imported User model)
 class CurrentUser(BaseModel):
@@ -71,48 +67,22 @@ async def register_user(user: User):
 
 @router.post("/login", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Token:
-    try:
-        logger.info(f"Attempting login for user: {form_data.username}")
-        
-        # Find user by username
-        user = user_collection.find_one({"username": form_data.username})
-        if not user:
-            logger.warning(f"Login failed: User not found - {form_data.username}")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect username or password",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+    user = user_collection.find_one({"username": form_data.username})
+    if not user or not verify_password(form_data.password, user["password"]):
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
 
-        # Verify password
-        if not verify_password(form_data.password, user["password"]):
-            logger.warning(f"Login failed: Invalid password for user - {form_data.username}")
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect username or password",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    
+    access_token = create_access_token(
+        data={
+            "sub": user["email"],  # Use email as the "sub" claim
+            "username": user["username"],
+            "user_id": str(user["_id"]) 
+        },
+        expires_delta=access_token_expires
+    )
 
-        # Create access token
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = create_access_token(
-            data={
-                "sub": user["email"],
-                "username": user["username"],
-                "user_id": str(user["_id"])
-            },
-            expires_delta=access_token_expires
-        )
-
-        logger.info(f"Login successful for user: {form_data.username}")
-        return Token(access_token=access_token, token_type="bearer")
-
-    except Exception as e:
-        logger.error(f"Login error: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred during login"
-        )
+    return Token(access_token=access_token, token_type="bearer")
 
 @router.get("/me", response_model=CurrentUser)
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
@@ -140,6 +110,46 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> CurrentUser:
 
         return CurrentUser(username=user_data["username"], user_id=str(user_data["_id"]))
 
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except jwt.InvalidTokenError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid token: {str(e)}",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        
+@router.get("/users", response_model=List[UserOut])# You can use a model for User to define the response schema
+async def get_all_users(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    # Decode the token to get current user's info
+    try:
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM],
+            options={"verify_exp": True}
+        )
+        
+        user_id: str = payload.get("user_id")
+        if not user_id:
+            raise credentials_exception
+
+        # Fetch all users except the current user
+        users = user_collection.find({"_id": {"$ne": ObjectId(user_id)}})
+        
+        # Return the list of users as the response
+        return [UserOut(username=user["username"], email=user["email"]) for user in users]
+    
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

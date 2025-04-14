@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 logger.info(f"AWS Region: {os.getenv('AWS_REGION')}")
 logger.info(f"AWS Bucket: {os.getenv('AWS_S3_BUCKET_NAME')}")
 logger.info("AWS Access Key ID present: " + str(bool(os.getenv('AWS_ACCESS_KEY_ID'))))
+
 logger.info("AWS Secret Access Key present: " + str(bool(os.getenv('AWS_SECRET_ACCESS_KEY'))))
 
 # Create S3 client using environment variables

@@ -40,29 +40,38 @@ export interface User {
   bio?: string;
 }
 
-export const authService = {
-  async login(credentials: LoginCredentials) {
-    try {
-      console.log('Sending login request with:', credentials);
-      const formData = new URLSearchParams();
-      formData.append('username', credentials.username.trim());
-      formData.append('password', credentials.password);
+export interface AuthResponse {
+  token: string;
+  user: {
+    id: string;
+    username: string;
+    email: string;
+  };
+}
 
-      const response = await api.post('/auth/login', formData, {
+export const authService = {
+  async login(username: string, password: string): Promise<AuthResponse> {
+    try {
+      const formData = new URLSearchParams();
+      formData.append('username', username.trim());
+      formData.append('password', password);
+
+      console.log('Sending login request with:', { username: username.trim() });
+      
+      const response = await axios.post(`${API_URL}/auth/login`, formData, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       });
+
       console.log('Login response:', response.data);
-      
-      // Set the token in localStorage and axios headers
+
       if (response.data.access_token) {
         this.setToken(response.data.access_token);
         // Get user data immediately after setting token
         const user = await this.getCurrentUser();
         return {
           token: response.data.access_token,
-          token_type: response.data.token_type,
           user
         };
       }
@@ -75,47 +84,31 @@ export const authService = {
           data: error.response?.data,
           headers: error.response?.headers,
         });
-        
-        // Handle validation errors
-        if (error.response?.status === 422) {
-          const validationErrors = error.response.data?.errors || {};
-          const errorMessages = Object.entries(validationErrors)
-            .map(([field, messages]) => `${field}: ${(messages as string[]).join(', ')}`)
-            .join('\n');
-          throw new Error(errorMessages || 'Invalid credentials');
-        }
-        
-        // Handle other errors
-        const errorMessage = error.response?.data?.message || 
-                           error.response?.data?.detail || 
-                           'Login failed';
-        throw new Error(errorMessage);
+        throw new Error(error.response?.data?.detail || 'Login failed');
       }
       throw error;
     }
   },
 
-  async signup(data: SignupData) {
+  async register(email: string, password: string, username: string): Promise<AuthResponse> {
+    const response = await axios.post<AuthResponse>(`${API_URL}/auth/register`, {
+      email,
+      password,
+      username,
+    });
+    return response.data;
+  },
+
+  async logout(): Promise<void> {
     try {
-      console.log('Sending signup request with:', data);
-      const response = await axios.post(`${API_URL}/auth/register`, {
-        username: data.username.trim(),
-        email: data.email.trim(),
-        password: data.password,
-        fullName: data.fullName.trim(),
+      await axios.post(`${API_URL}/auth/logout`, {}, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
       });
-      console.log('Signup response:', response.data);
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error('Signup error details:', {
-          status: error.response?.status,
-          data: error.response?.data,
-          headers: error.response?.headers,
-        });
-        throw new Error(error.response?.data?.message || 'Signup failed');
-      }
-      throw error;
+    } finally {
+      localStorage.removeItem('token');
+      delete api.defaults.headers.common['Authorization'];
     }
   },
 
@@ -136,11 +129,6 @@ export const authService = {
       console.error('Error fetching current user:', error);
       throw error;
     }
-  },
-
-  logout() {
-    localStorage.removeItem('token');
-    delete api.defaults.headers.common['Authorization'];
   },
 
   setToken(token: string) {

@@ -36,6 +36,17 @@ export const imageService = {
         Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
     });
-    return response.data;
+    return response.data.map((post: any) => ({
+      ...post,
+      imageUrl: post.image_url,
+      id: post._id || Math.random().toString(36).substr(2, 9),
+      likesCount: post.likesCount || 0,
+      commentsCount: post.commentsCount || 0,
+      createdAt: post.created_at || new Date().toISOString(),
+      user: {
+        username: post.user_id || 'Unknown User',
+        profilePicture: null
+      }
+    }));
   },
 };

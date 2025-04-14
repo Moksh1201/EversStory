@@ -6,7 +6,7 @@ services:
     container_name: auth-service
     environment:
       - MONGO_URI=mongodb+srv://mokshmadaan27:EY5ThSRlNK7CtFYa@cluster0.tneeu6b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
-      - JWT_SECRET=your-super-secret-key-here-1234567890
+      - JWT_SECRET=${JWT_SECRET}
       - JWT_ALGORITHM=HS256
       - ACCESS_TOKEN_EXPIRE_MINUTES=30
     ports:
@@ -27,8 +27,11 @@ services:
       - AWS_S3_BUCKET_NAME=${AWS_S3_BUCKET_NAME}
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
       - AWS_REGION=${AWS_REGION}
       - MONGO_URI=mongodb+srv://mokshmadaan27:EY5ThSRlNK7CtFYa@cluster0.tneeu6b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ALGORITHM=HS256
     ports:
       - "8002:8001"
     networks:
@@ -43,7 +46,7 @@ services:
     container_name: friendship-service
     environment:
       - MONGO_URI=mongodb+srv://mokshmadaan27:EY5ThSRlNK7CtFYa@cluster0.tneeu6b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
-      - JWT_SECRET=your-super-secret-key-here-1234567890
+      - JWT_SECRET=${JWT_SECRET}
       - JWT_ALGORITHM=HS256
     ports:
       - "8003:8001"
