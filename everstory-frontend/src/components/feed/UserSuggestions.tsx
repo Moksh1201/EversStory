@@ -8,6 +8,7 @@ export const UserSuggestions = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pendingFollows, setPendingFollows] = useState<Set<string>>(new Set());
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -27,6 +28,10 @@ export const UserSuggestions = () => {
 
     fetchSuggestions();
   }, []);
+
+  const handleImageError = (userId: string) => {
+    setFailedImages(prev => new Set(prev).add(userId));
+  };
 
   const handleFollow = async (userId: string) => {
     try {
@@ -122,18 +127,10 @@ export const UserSuggestions = () => {
         {suggestions.map((user) => (
           <div key={user.id} className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden">
-                {user.profilePicture ? (
-                  <img
-                    src={user.profilePicture}
-                    alt={user.username}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <FaUser />
-                  </div>
-                )}
+              <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  <FaUser />
+                </div>
               </div>
               <div>
                 <p className="font-semibold">{user.username}</p>

@@ -27,6 +27,7 @@ export interface Post {
 export interface User {
   id: string;
   username: string;
+  email: string;
   profilePicture?: string;
   isFollowing?: boolean;
 }
@@ -41,6 +42,20 @@ export const userService = {
     return response.data;
   },
 
+  async getCurrentUser() {
+    try {
+      const response = await axios.get(`${API_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching current user:', error);
+      throw error;
+    }
+  },
+
   async getSuggestions() {
     const response = await axios.get(`${API_URL}/auth/users`, {
       headers: {
@@ -51,28 +66,82 @@ export const userService = {
   },
 
   async followUser(userId: string) {
-    const response = await axios.post(
-      `${FRIENDSHIP_API_URL}/request`,
-      { accepter: userId },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+    try {
+      // Get current user's email from token
+      const currentUser = await this.getCurrentUser();
+      console.log('Current user:', currentUser);
+      
+      // Get target user's email from suggestions data
+      const suggestions = await this.getSuggestions();
+      const targetUser = suggestions.find(user => user.id === userId);
+      
+      if (!targetUser) {
+        throw new Error('Target user not found');
       }
-    );
-    return response.data;
+      
+      console.log('Target user:', targetUser);
+
+      const requestData = {
+        requester: currentUser.email,
+        accepter: targetUser.email
+      };
+      
+      console.log('Sending follow request with data:', requestData);
+      
+      const response = await axios.post(
+        `${FRIENDSHIP_API_URL}/request`,
+        requestData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+      console.log('Follow response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error following user:', error);
+      throw error;
+    }
   },
 
   async unfollowUser(userId: string) {
-    const response = await axios.post(
-      `${FRIENDSHIP_API_URL}/unfollow`,
-      { accepter: userId },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
+    try {
+      // Get current user's email from token
+      const currentUser = await this.getCurrentUser();
+      console.log('Current user:', currentUser);
+      
+      // Get target user's email from suggestions data
+      const suggestions = await this.getSuggestions();
+      const targetUser = suggestions.find(user => user.id === userId);
+      
+      if (!targetUser) {
+        throw new Error('Target user not found');
       }
-    );
-    return response.data;
+      
+      console.log('Target user:', targetUser);
+
+      const requestData = {
+        requester: currentUser.email,
+        accepter: targetUser.email
+      };
+      
+      console.log('Sending unfollow request with data:', requestData);
+      
+      const response = await axios.post(
+        `${FRIENDSHIP_API_URL}/unfollow`,
+        requestData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+      console.log('Unfollow response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error unfollowing user:', error);
+      throw error;
+    }
   }
 }; 

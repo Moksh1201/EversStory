@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
 
@@ -41,89 +42,78 @@ export interface User {
 }
 
 export interface AuthResponse {
-  token: string;
-  user: {
-    id: string;
-    username: string;
-    email: string;
-  };
+  access_token: string;
+  token_type: string;
 }
 
 export const authService = {
   async login(username: string, password: string): Promise<AuthResponse> {
-    try {
-      const formData = new URLSearchParams();
-      formData.append('username', username.trim());
-      formData.append('password', password);
+    const params = new URLSearchParams();
+    params.append('username', username.trim());
+    params.append('password', password);
 
-      console.log('Sending login request with:', { username: username.trim() });
-      
-      const response = await axios.post(`${API_URL}/auth/login`, formData, {
+    try {
+      console.log('Sending login request...');
+      const response = await axios.post(`${API_URL}/auth/login`, params, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       });
-
       console.log('Login response:', response.data);
 
       if (response.data.access_token) {
         this.setToken(response.data.access_token);
-        // Get user data immediately after setting token
-        const user = await this.getCurrentUser();
-        return {
-          token: response.data.access_token,
-          user
-        };
+        return response.data;
       }
-      
-      return response.data;
+      throw new Error('No access token received');
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error('Login error details:', {
-          status: error.response?.status,
-          data: error.response?.data,
-          headers: error.response?.headers,
-        });
-        throw new Error(error.response?.data?.detail || 'Login failed');
-      }
+      console.error('Login error:', error);
       throw error;
     }
   },
 
-  async register(email: string, password: string, username: string): Promise<AuthResponse> {
-    const response = await axios.post<AuthResponse>(`${API_URL}/auth/register`, {
-      email,
-      password,
-      username,
-    });
-    return response.data;
+  async register(email: string, username: string, password: string): Promise<AuthResponse> {
+    try {
+      const response = await axios.post(`${API_URL}/auth/register`, {
+        email,
+        username,
+        password,
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
   },
 
   async logout(): Promise<void> {
     try {
-      await axios.post(`${API_URL}/auth/logout`, {}, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      // Try to call the logout endpoint if it exists
+      await axios.post(
+        `${API_URL}/auth/logout`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Continue with local cleanup even if the server request fails
     } finally {
+      // Always clear local storage and axios headers
       localStorage.removeItem('token');
       delete api.defaults.headers.common['Authorization'];
+      
+      // Redirect to sign-in page
+      window.location.href = '/signin';
     }
   },
 
   async getCurrentUser() {
     try {
-      const token = this.getToken();
-      if (!token) {
-        throw new Error('No token available');
-      }
-      
-      const response = await api.get('/auth/me', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
+      const response = await api.get('/auth/me');
       return response.data;
     } catch (error) {
       console.error('Error fetching current user:', error);
