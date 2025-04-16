@@ -14,7 +14,7 @@ class UserInDB(BaseModel):
 class FollowRequestSchema(BaseModel):
     follower_username: str
     following_username: str
-    status: str  # 'pending', 'accepted', 'rejected'
+    status: str  
 
 class UserResponse(BaseModel):
     username: str
@@ -25,7 +25,7 @@ class UserResponse(BaseModel):
 
 class FollowStatus(BaseModel):
     following_username: str
-    status: str  # 'followed', 'unfollowed'
+    status: str  
 
 class Token(BaseModel):
     access_token: str

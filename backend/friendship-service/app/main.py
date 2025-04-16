@@ -14,20 +14,20 @@ from app.friendship import (
     reject_request_logic,
     get_friends_logic,
     cancel_request_logic,
-    unfollow_logic
+    unfollow_logic,
+    get_pending_requests_logic
 )
 
 app = FastAPI()
 
-# CORS configuration
 origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173"
+    "http://localhost:*",
+    "http://127.0.0.1:*"
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -41,13 +41,12 @@ ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 def get_current_user(token: str = Depends(oauth2_scheme)) -> str:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload.get("sub")
+        return payload.get("sub")  
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
     except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-# Endpoints
 @app.post("/request")
 async def create_friendship(
     request: FriendshipRequest,
@@ -71,9 +70,9 @@ async def reject_friendship(
 ):
     return await reject_request_logic(request, db)
 
-@app.get("/friends/{user_id}", response_model=FriendListResponse)
-async def get_friends(user_id: str, db: Collection = Depends(get_db)):
-    return await get_friends_logic(user_id, db)
+@app.get("/friends/{username}", response_model=FriendListResponse)
+async def get_friends(username: str, db: Collection = Depends(get_db)):
+    return await get_friends_logic(username, db)
 
 @app.post("/cancel-request")
 async def cancel_request(
@@ -90,3 +89,10 @@ async def unfollow(
     current_user: str = Depends(get_current_user)
 ):
     return await unfollow_logic(request, db, current_user)
+
+@app.get("/pending-requests/{username}")
+async def get_pending_requests(
+    username: str,
+    db: Collection = Depends(get_db)
+):
+    return await get_pending_requests_logic(username, db)

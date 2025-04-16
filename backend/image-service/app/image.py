@@ -266,13 +266,9 @@ async def upload_image(
     if file.content_type not in ["image/jpeg", "image/png"]:
         raise HTTPException(status_code=400, detail="Invalid image format")
 
-    # Read the file bytes
     file_bytes = await file.read()
-
-    # Upload image to S3 and get the URL
     image_url = await s3_utils.upload_to_s3(file_bytes, file.filename)
 
-    # Save metadata to the database
     image_id = models.create_image_metadata(
         db=db,
         user_id=user_id,
@@ -290,13 +286,11 @@ async def upload_image(
     }
 
 
-# Get feed endpoint (public images and private ones owned by the user)
 @router.get("/feed", response_model=List[ImageOut])
 def get_feed(
     db=Depends(database.get_database_connection),
     user_id: str = Depends(get_current_user_id)
 ):
-    # Fetch all public images and private images owned by the user
     images = db["images"].find({
         "$or": [
             {"visibility": "public"},
@@ -314,7 +308,6 @@ def get_feed(
         for img in images
     ]
 
-# Get user feed endpoint
 @router.get("/user-feed/{user_id}", response_model=List[ImageOut])
 def get_user_feed(
     user_id: str,
@@ -324,13 +317,11 @@ def get_user_feed(
     images_collection = db["images"]
     user_collection = db["users"]
 
-    # Check if the user exists
     user = user_collection.find_one({"_id": ObjectId(user_id)})
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Check visibility and follow status
     if user["visibility"] == "public" or viewer_id in user.get("followers", []):
         images = images_collection.find({"user_id": user_id})
         return [ImageOut(**img) for img in images]
@@ -338,7 +329,6 @@ def get_user_feed(
     raise HTTPException(status_code=403, detail="You do not have permission to view these images.")
 
 
-# Delete image endpoint
 @router.delete("/{image_id}", status_code=204)
 async def delete_image(
     image_id: str,
@@ -352,16 +342,13 @@ async def delete_image(
     if image["user_id"] != user_id:
         raise HTTPException(status_code=403, detail="Not authorized to delete this image")
 
-    # Delete from S3
     await s3_utils.delete_from_s3(image["image_url"])
 
-    # Remove from database
     db["images"].delete_one({"_id": ObjectId(image_id)})
 
     return {"detail": "Image deleted successfully"}
 
 
-# Get image endpoint
 @router.get("/{image_id}", response_model=ImageOut)
 async def get_image(
     image_id: str,
@@ -383,10 +370,6 @@ async def get_image(
     }
 
 
-
-
-
-# Update image metadata endpoint
 @router.put("/{image_id}", response_model=ImageOut)
 def update_image_metadata(
     image_id: str,
@@ -402,7 +385,6 @@ def update_image_metadata(
     if image["user_id"] != user_id:
         raise HTTPException(status_code=403, detail="Not authorized")
 
-    # Update image metadata in the database
     db["images"].update_one(
         {"_id": ObjectId(image_id)},
         {"$set": {"caption": caption, "visibility": visibility}}

@@ -3,8 +3,8 @@ from datetime import datetime
 from typing import List
 
 class FriendshipRequest(BaseModel):
-    requester: str
-    accepter: str
+    requester: str  
+    accepter: str   
 
 class FriendshipResponse(BaseModel):
     id: str
