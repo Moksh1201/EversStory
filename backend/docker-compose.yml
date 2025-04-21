@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: auth-service
     environment:
-      - MONGO_URI=mongodb+srv://mokshmadaan27:EY5ThSRlNK7CtFYa@cluster0.tneeu6b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - MONGO_URI=${MONGO_URI}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_ALGORITHM=HS256
       - ACCESS_TOKEN_EXPIRE_MINUTES=30
@@ -29,7 +29,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
       - AWS_REGION=${AWS_REGION}
-      - MONGO_URI=mongodb+srv://mokshmadaan27:EY5ThSRlNK7CtFYa@cluster0.tneeu6b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - MONGO_URI=${MONGO_URI}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_ALGORITHM=HS256
     ports:
@@ -45,7 +45,7 @@ services:
       dockerfile: Dockerfile
     container_name: friendship-service
     environment:
-      - MONGO_URI=mongodb+srv://mokshmadaan27:EY5ThSRlNK7CtFYa@cluster0.tneeu6b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - MONGO_URI=${MONGO_URI}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_ALGORITHM=HS256
     ports:
@@ -59,7 +59,7 @@ services:
     image: mongo:latest
     container_name: mongodb
     environment:
-      - MONGO_URI=mongodb+srv://mokshmadaan27:EY5ThSRlNK7CtFYa@cluster0.tneeu6b.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - MONGO_URI=${MONGO_URI}
     ports:
       - "27017:27017"
     networks:
